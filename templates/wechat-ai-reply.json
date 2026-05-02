@@ -1,0 +1,58 @@
+{
+  "name": "公众号用户消息AI自动回复",
+  "description": "当用户给公众号发送消息时，使用Gemini AI生成智能回复，自动回复用户",
+  "nodes": [
+    {
+      "id": "trigger_wechat",
+      "type": "wechat_message_trigger",
+      "nodeType": "trigger",
+      "position": { "x": 100, "y": 200 },
+      "data": {
+        "label": "微信消息触发",
+        "config": {}
+      }
+    },
+    {
+      "id": "gemini_generate",
+      "type": "gemini_text",
+      "nodeType": "gemini",
+      "position": { "x": 400, "y": 200 },
+      "data": {
+        "label": "Gemini文本生成",
+        "config": {
+          "credentialId": "",
+          "model": "gemini-2.0-flash",
+          "prompt": "你是一个友好的公众号智能助手。请根据用户的消息内容，生成一个有帮助、友好的回复。\n\n用户消息：{{$trigger.content}}\n\n要求：\n1. 回复要简洁明了\n2. 语气友好亲切\n3. 如果是问题，尽量给出有用的回答\n4. 回复长度控制在200字以内",
+          "temperature": 0.7,
+          "maxTokens": 1024
+        }
+      }
+    },
+    {
+      "id": "wechat_reply",
+      "type": "wechat_message_reply",
+      "nodeType": "wechat",
+      "position": { "x": 700, "y": 200 },
+      "data": {
+        "label": "公众号消息回复",
+        "config": {
+          "credentialId": "",
+          "msgType": "text",
+          "content": "{{$node.gemini_generate.output.text}}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "trigger_wechat",
+      "target": "gemini_generate"
+    },
+    {
+      "id": "edge_2",
+      "source": "gemini_generate",
+      "target": "wechat_reply"
+    }
+  ]
+}

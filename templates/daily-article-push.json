@@ -1,0 +1,87 @@
+{
+  "name": "每日Gemini生成公众号推文",
+  "description": "每天定时使用Gemini AI生成公众号文章草稿，自动创建图文消息",
+  "nodes": [
+    {
+      "id": "trigger_cron",
+      "type": "cron_trigger",
+      "nodeType": "trigger",
+      "position": { "x": 100, "y": 200 },
+      "data": {
+        "label": "定时触发",
+        "config": {
+          "expression": "0 9 * * *",
+          "description": "每天早上9点"
+        }
+      }
+    },
+    {
+      "id": "gemini_title",
+      "type": "gemini_content",
+      "nodeType": "gemini",
+      "position": { "x": 400, "y": 100 },
+      "data": {
+        "label": "生成文章标题",
+        "config": {
+          "credentialId": "",
+          "model": "gemini-2.0-flash",
+          "operation": "titleGenerate",
+          "customPrompt": "请为以下主题生成一个吸引人的公众号文章标题，要求：\n1. 标题简洁有力\n2. 能引起读者兴趣\n3. 包含关键词\n4. 长度控制在20字以内\n\n主题：科技、AI、个人成长、效率工具",
+          "temperature": 0.9
+        }
+      }
+    },
+    {
+      "id": "gemini_article",
+      "type": "gemini_text",
+      "nodeType": "gemini",
+      "position": { "x": 400, "y": 300 },
+      "data": {
+        "label": "生成文章内容",
+        "config": {
+          "credentialId": "",
+          "model": "gemini-2.0-flash",
+          "prompt": "请写一篇公众号文章，要求：\n\n标题：{{$node.gemini_title.output.text}}\n\n要求：\n1. 文章结构清晰，有引言、正文、总结\n2. 内容有价值，能给读者带来启发\n3. 语言通俗易懂，适合公众号阅读\n4. 字数控制在800-1200字\n5. 适当使用emoji增加可读性\n6. 结尾可以加一个互动问题",
+          "temperature": 0.8,
+          "maxTokens": 4096
+        }
+      }
+    },
+    {
+      "id": "wechat_publish",
+      "type": "wechat_publish",
+      "nodeType": "wechat",
+      "position": { "x": 700, "y": 200 },
+      "data": {
+        "label": "创建图文草稿",
+        "config": {
+          "credentialId": "",
+          "action": "addDraft",
+          "articles": "[{\"title\":\"{{$node.gemini_title.output.text}}\",\"content\":\"{{$node.gemini_article.output.text}}\",\"author\":\"FlowPilot AI助手\",\"digest\":\"{{摘要由AI自动生成}}\"}]"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "trigger_cron",
+      "target": "gemini_title"
+    },
+    {
+      "id": "edge_2",
+      "source": "trigger_cron",
+      "target": "gemini_article"
+    },
+    {
+      "id": "edge_3",
+      "source": "gemini_title",
+      "target": "wechat_publish"
+    },
+    {
+      "id": "edge_4",
+      "source": "gemini_article",
+      "target": "wechat_publish"
+    }
+  ]
+}
